@@ -114,7 +114,7 @@ h1,h2,h3,h4{margin:0;letter-spacing:-.02em}
 p{margin:0}
 button{font-family:inherit;cursor:pointer}
 input,textarea{font-family:inherit}
-.page{max-width:1440px;margin:0 auto}
+.page{width:100%}
 .logo{height:28px;width:auto;align-self:flex-start;flex:0 0 auto}
 svg{max-width:100%;height:auto}
 :focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
@@ -127,6 +127,10 @@ svg{max-width:100%;height:auto}
         decl = quantise(samples[key][0]).rstrip(';')
         decl = re.sub(r'\s*;\s*', ';', decl)
         decl = re.sub(r':\s+', ':', decl)
+        # 80px gutters become "80px, or half the overflow past 1280", so bands go
+        # edge to edge on a wide monitor while the text stays a readable measure
+        decl = re.sub(r'(padding:\s*[^;]*?)\b80px\b',
+                      r'\1max(80px, calc((100% - 1280px) / 2))', decl)
         out.append('.%s{%s}' % (nm, decl))
 
     # ---- responsive, per BUILD-GUIDE.md ----
