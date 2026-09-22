@@ -84,6 +84,9 @@ def render(n, names, depth=1):
                 px = m2.group(1) if m2 else '28'
                 return pad + ('<img src="assets/%s" alt="%s" class="%s" style="height:%spx" '
                               'width="%d" height="%d">\n') % (fname, alt, cls, px, w, h)
+        if '7a25399c69e4ec438ce149534ac4e0ba' in src:      # nonprofit: one person, four relationships
+            return pad + ('<img src="assets/nonprofit-one-person.webp" alt="%s" class="figure" '
+                          'width="1920" height="1150" fetchpriority="high">\n') % alt
         if '573dbbaf76c7353c0dba42041738d9b8' in src:      # four-layer stack cards, cropped from the supplied image
             return pad + ('<img src="assets/stack-cards.webp" alt="%s" class="figure" '
                           'width="1900" height="470" fetchpriority="high">\n') % alt
