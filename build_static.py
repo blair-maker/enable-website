@@ -22,7 +22,16 @@ PAGES = [
     ('Main', 'storeconnect', 'StoreConnect on Salesforce, NZ implementation partner | Enable'),
     ('Lumin', 'lumin', 'Lumin Sign for Salesforce, NZ implementation partner | Enable'),
     ('Gridmate', 'gridmate', 'GridMate for Salesforce, implementation partner | Enable'),
-    ('Nonprofit', 'nonprofit', 'Nonprofit Cloud consultants, New Zealand | Enable'),
+    ('Nonprofit', 'nonprofit-cloud', 'Nonprofit Cloud consultants, New Zealand | Enable'),
+    ('SalesCloud', 'sales-cloud', 'Sales Cloud consultants, New Zealand | Enable'),
+    ('ServiceCloud', 'service-cloud', 'Service Cloud consultants, New Zealand | Enable'),
+    ('Data360', 'data-360', 'Data 360 consultants, New Zealand | Enable'),
+    ('SlackPage', 'slack', 'Slack and Salesforce consultants, New Zealand | Enable'),
+    ('IndAgritech', 'agritech', 'Agritech and primary sector Salesforce partner | Enable'),
+    ('IndNonprofit', 'nonprofit', 'Nonprofit Salesforce partner, New Zealand | Enable'),
+    ('IndFinancial', 'financial-services', 'Financial services Salesforce partner, New Zealand | Enable'),
+    ('IndAgedCare', 'aged-care', 'Aged care and retirement living Salesforce partner | Enable'),
+    ('IndEducation', 'education', 'Education Salesforce partner, New Zealand | Enable'),
     ('NpspMigration', 'npsp-migration', 'NPSP to Nonprofit Cloud migration | Enable'),
     ('MarketingCloudNext', 'marketing-cloud-next', 'Marketing Cloud Next, first APAC partner | Enable'),
     ('CaseStudies', 'work', 'Our work, described honestly | Enable'),
@@ -106,26 +115,32 @@ Ask Enable</button>
   window.EnableAgent={open:open,close:close,root:document.getElementById('agent-root'),
                       el:d,on:function(fn){ d.addEventListener('agent:ask',function(e){ fn(e.detail.text); }); }};
 })();
-(function(){                                   // Products dropdown
-  var g = document.querySelector('[data-nav-group]');
-  if(!g) return;
-  var t = g.querySelector('.nav-trigger'), shut;
+(function(){                                   // nav dropdowns
+  var groups = [].slice.call(document.querySelectorAll('[data-nav-group]'));
+  if(!groups.length) return;
   var fine = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  function open(){ clearTimeout(shut); g.setAttribute('data-open',''); t.setAttribute('aria-expanded','true'); }
-  function close(){ g.removeAttribute('data-open'); t.setAttribute('aria-expanded','false'); }
-  t.addEventListener('click', function(){ g.hasAttribute('data-open') ? close() : open(); });
-  if(fine){                                    // pointer users expect hover, with a forgiving exit
-    g.addEventListener('mouseenter', open);
-    g.addEventListener('mouseleave', function(){ shut = setTimeout(close, 160); });
-  }
-  // deliberately not opening on focus: tabbing past the nav should not pop a menu.
-  // Enter and Space already reach the button's click handler.
-  g.addEventListener('focusout', function(e){
-    if(!g.contains(e.relatedTarget)) close();
+  function shut(g){ g.removeAttribute('data-open');
+    g.querySelector('.nav-trigger').setAttribute('aria-expanded','false'); }
+  function all(){ groups.forEach(shut); }
+  groups.forEach(function(g){
+    var t = g.querySelector('.nav-trigger'), timer;
+    function open(){ clearTimeout(timer); all(); g.setAttribute('data-open','');
+      t.setAttribute('aria-expanded','true'); }
+    t.addEventListener('click', function(){ g.hasAttribute('data-open') ? shut(g) : open(); });
+    if(fine){                                  // pointer users expect hover, with a forgiving exit
+      g.addEventListener('mouseenter', open);
+      g.addEventListener('mouseleave', function(){ timer = setTimeout(function(){ shut(g); }, 160); });
+    }
+    // deliberately not opening on focus: tabbing past the nav should not pop a menu.
+    // Enter and Space already reach the button's click handler.
+    g.addEventListener('focusout', function(e){ if(!g.contains(e.relatedTarget)) shut(g); });
   });
-  document.addEventListener('click', function(e){ if(!g.contains(e.target)) close(); });
+  document.addEventListener('click', function(e){
+    if(!e.target.closest || !e.target.closest('[data-nav-group]')) all(); });
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && g.hasAttribute('data-open')){ close(); t.focus(); }
+    if(e.key !== 'Escape') return;
+    var open = document.querySelector('[data-nav-group][data-open]');
+    if(open){ shut(open); open.querySelector('.nav-trigger').focus(); }
   });
 })();
 </script>
@@ -375,36 +390,106 @@ def render(n, names, depth=1):
     return pad + '<%s%s>\n%s%s</%s>\n' % (tag, a, inner, pad, tag)
 
 
-PRODUCTS = [('lumin', 'Lumin', 'Agreements signed and filed without leaving Salesforce'),
-            ('gridmate', 'GridMate', 'Spreadsheet-speed editing, and RevenueMate for quoting'),
-            ('storeconnect', 'StoreConnect', 'Storefront and point of sale, natively on Salesforce')]
+NAV = [
+    ('The stack', 'index', None, None),
+    ('Salesforce', None, 'sf', [
+        ('salesforce', 'Salesforce practice', 'How we work across the whole platform', True),
+        ('sales-cloud', 'Sales Cloud', 'Pipeline and forecasting you can defend', False),
+        ('service-cloud', 'Service Cloud', 'Cases, routing, SLAs and service agents', False),
+        ('data-360', 'Data 360', 'One customer record out of many systems', False),
+        ('slack', 'Slack', 'Where the work happens, linked to the record', False),
+        ('nonprofit-cloud', 'Nonprofit Cloud', 'Fundraising, programs and grants', False),
+        ('marketing-cloud-next', 'Marketing Cloud Next', 'Journeys, consent and agentic marketing', False)]),
+    ('Partners', None, 'pt', [
+        ('lumin', 'Lumin', 'Agreements signed and filed without leaving Salesforce', False),
+        ('gridmate', 'GridMate', 'Spreadsheet-speed editing, and RevenueMate for quoting', False),
+        ('storeconnect', 'StoreConnect', 'Storefront and point of sale, natively on Salesforce', False)]),
+    ('Waypoint', 'waypoint', None, None),
+    ('Industries', None, 'in', [
+        ('agritech', 'Agritech', 'Primary sector relationships, seasons and compliance', False),
+        ('nonprofit', 'Nonprofit', 'Funding, programs, volunteers and supporters', False),
+        ('financial-services', 'Financial services', 'Advice you can evidence years later', False),
+        ('aged-care', 'Aged care', 'Enquiries that are families, not leads', False),
+        ('education', 'Education', 'One learner across the whole lifecycle', False)]),
+    ('Work', 'work', None, None),
+]
+
+FOOTER_COLS = [
+    ('Salesforce', [('salesforce', 'Salesforce practice'), ('sales-cloud', 'Sales Cloud'),
+                    ('service-cloud', 'Service Cloud'), ('data-360', 'Data 360'), ('slack', 'Slack'),
+                    ('nonprofit-cloud', 'Nonprofit Cloud'),
+                    ('marketing-cloud-next', 'Marketing Cloud Next')]),
+    ('Partners', [('storeconnect', 'StoreConnect'), ('lumin', 'Lumin Sign'), ('gridmate', 'GridMate')]),
+    ('Industries', [('agritech', 'Agritech'), ('nonprofit', 'Nonprofit'),
+                    ('financial-services', 'Financial services'), ('aged-care', 'Aged care'),
+                    ('education', 'Education')]),
+    ('Company', [('waypoint', 'Waypoint'), ('work', 'The work'), ('npsp-migration', 'NPSP migration'),
+                 ('about', 'About'), ('contact', 'Contact')]),
+]
+
+CHEVRON = ('<svg width="10" height="7" viewBox="0 0 10 7" aria-hidden="true">'
+           '<path d="M1 1.5L5 5.5L9 1.5" fill="none" stroke="currentColor" stroke-width="1.6" '
+           'stroke-linecap="round" stroke-linejoin="round"/></svg>')
 
 
-def products_menu(inner, slug):
-    """The Products nav item pointed at lumin.html, which picked one product arbitrarily.
-    Swap it for a group the visitor chooses from. The trigger keeps whatever class the
-    original anchor carried, so it stays typographically identical to its neighbours."""
-    m = re.search(r'<a class="([^"]+)" href="lumin\.html">Products</a>', inner)
+def nav_rebuild(inner, slug):
+    """The artboards carry a flat nav baked in at design time. Menus are a site concern,
+    so the whole nav is regenerated here from NAV rather than patched link by link.
+    The generated classes are lifted off the existing markup so type stays identical."""
+    m = re.search(r'<nav class="([^"]+)">(.*?)</nav>', inner, re.S)
     if not m:
         return inner
-    cls = m.group(1)
-    items = []
-    for s_, name, blurb in PRODUCTS:
-        cur = ' aria-current="page"' if s_ == slug else ''
-        items.append('<a class="nav-item" role="menuitem" href="%s.html"%s>'
-                     '<span class="nav-item-t">%s</span>'
-                     '<span class="nav-item-d">%s</span></a>' % (s_, cur, name, blurb))
-    open_ = ' data-on' if slug in {s_ for s_, _, _ in PRODUCTS} else ''
-    group = ('<div class="nav-group"%s data-nav-group>'
-             '<button class="%s nav-trigger" type="button" aria-expanded="false" '
-             'aria-haspopup="true" aria-controls="nav-products">Products'
-             '<svg width="10" height="7" viewBox="0 0 10 7" aria-hidden="true">'
-             '<path d="M1 1.5L5 5.5L9 1.5" fill="none" stroke="currentColor" '
-             'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-             '</button>'
-             '<div class="nav-menu" id="nav-products" role="menu">%s</div>'
-             '</div>') % (open_, cls, ''.join(items))
-    return inner.replace(m.group(0), group, 1)
+    navcls, block = m.group(1), m.group(2)
+    links = re.findall(r'<a class="([^"]+)" href="[^"]*">', block)
+    if len(links) < 2:
+        return inner
+    btncls = links[-1]                       # the Contact us pill is always last
+    rest = links[:-1]
+    plain = max(set(rest), key=rest.count)   # the odd one out is the current page's link
+    active = next((c for c in rest if c != plain), plain)
+
+    rows = []
+    for label, href, key, items in NAV:
+        if not items:
+            cls = active if href == slug else plain
+            rows.append('<a class="%s" href="%s.html">%s</a>' % (cls, href, label))
+            continue
+        here = any(s_ == slug for s_, _, _, _ in items)
+        body = []
+        for s_, name, blurb, overview in items:
+            cur = ' aria-current="page"' if s_ == slug else ''
+            ov = ' nav-item-over' if overview else ''
+            body.append('<a class="nav-item%s" role="menuitem" href="%s.html"%s>'
+                        '<span class="nav-item-t">%s</span>'
+                        '<span class="nav-item-d">%s</span></a>' % (ov, s_, cur, name, blurb))
+        rows.append('<div class="nav-group"%s data-nav-group>'
+                    '<button class="%s nav-trigger" type="button" aria-expanded="false" '
+                    'aria-haspopup="true" aria-controls="nav-%s">%s%s</button>'
+                    '<div class="nav-menu" id="nav-%s" role="menu">%s</div></div>'
+                    % (' data-on' if here else '', active if here else plain, key,
+                       label, CHEVRON, key, ''.join(body)))
+    rows.append('<a class="%s" href="contact.html">Contact us</a>' % btncls)
+    return inner.replace(m.group(0),
+                         '<nav class="%s">%s</nav>' % (navcls, ''.join(rows)), 1)
+
+
+def footer_rebuild(inner, slug):
+    """Same reasoning as the nav: the link columns were baked into each artboard before
+    the industry and cloud pages existed."""
+    m = re.search(r'(<div class="grid-4">)(.*?)(</div>\s*</div>\s*<div class="row-split)', inner, re.S)
+    if not m:
+        return inner
+    cols = re.findall(r'<div class="(stack)">\s*<span class="([^"]+)">', m.group(2))
+    linkcls = re.findall(r'<a class="([^"]+)" href="[^"]*">', m.group(2))
+    if not cols or not linkcls:
+        return inner
+    stackcls, headcls, lcls = 'stack', cols[0][1], max(set(linkcls), key=linkcls.count)
+    out = []
+    for title, items in FOOTER_COLS:
+        ls = ''.join('\n<a class="%s" href="%s.html">%s</a>' % (lcls, s_, t) for s_, t in items)
+        out.append('\n<div class="%s">\n<span class="%s">%s</span>%s\n</div>'
+                   % (stackcls, headcls, title, ls))
+    return inner.replace(m.group(0), m.group(1) + ''.join(out) + '\n' + m.group(3), 1)
 
 
 def build_index(bodies, slugs):
@@ -509,6 +594,7 @@ input,textarea{font-family:inherit}
  text-decoration:none;transition:background .12s ease}
 .nav-item:hover,.nav-item:focus-visible{background:var(--mist);outline:none}
 .nav-item[aria-current="page"]{background:var(--tint)}
+.nav-item-over{border-bottom:1px solid var(--hair);border-radius:9px 9px 0 0;margin-bottom:4px;padding-bottom:13px}
 .nav-item-t{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .nav-item-d{font-size:13px;line-height:1.45;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.nav-menu,.nav-trigger svg{transition:none}}
@@ -635,7 +721,7 @@ def main():
     for stem, slug, title in PAGES:
         wrapper = trees[stem].root.kids[0]
         inner = ''.join(render(k, names, 2) for k in wrapper.kids)
-        inner = products_menu(inner, slug)
+        inner = footer_rebuild(nav_rebuild(inner, slug), slug)
         bodies[slug] = (inner, title)
         for attr in re.findall(r'class="([^"]+)"', inner):
             used.update(attr.split())      # multi-class attrs, or rules get pruned
