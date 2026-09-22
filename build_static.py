@@ -85,7 +85,8 @@ def render(n, names, depth=1):
                 return pad + ('<img src="assets/%s" alt="%s" class="%s" style="height:%spx" '
                               'width="%d" height="%d">\n') % (fname, alt, cls, px, w, h)
         own = names.get(norm(n.attrs['style'])) if n.attrs.get('style') else None
-        for blob, fname, w, h in [('7a25399c69e4ec438ce149534ac4e0ba', 'nonprofit-one-person.webp', 1920, 1150),
+        for blob, fname, w, h in [('056670e8f10d448082d96732476903e2', 'stack-hero.webp', 2000, 1125),
+                                  ('7a25399c69e4ec438ce149534ac4e0ba', 'nonprofit-one-person.webp', 1920, 1150),
                                   ('573dbbaf76c7353c0dba42041738d9b8', 'stack-cards.webp', 1900, 470),
                                   ('f804320afea9631b2b0476d9c0716114', 'hnz-identity-resolution.webp', 2000, 1000)]:
             if blob in src:
