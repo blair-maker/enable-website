@@ -39,6 +39,7 @@ PAGES = [
     ('Case2', 'work-retirement-living', 'Case study: when every enquiry reaches one person | Enable'),
     ('Case3', 'work-farm-focus', 'Case study: Farm Focus | Enable'),
     ('Case4', 'work-st-john', 'Case study: rapid AI delivery at Hato Hone St John | Enable'),
+    ('Case5', 'work-udc', 'Case study: UDC Finance | Enable'),
 ]
 SLUG = {stem: slug for stem, slug, _ in PAGES}
 DRAWER = '''<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
@@ -356,6 +357,22 @@ def render(n, names, depth=1):
                 return pad + ('<img src="assets/%s" alt="%s" class="%s" style="height:%spx" '
                               'width="%d" height="%d">\n') % (fname, alt, cls, px, w, h)
         own = names.get(norm(n.attrs['style'])) if n.attrs.get('style') else None
+        for blob, fname, w, h in [('50816e1767b6be921e871d5a9a50351c', 'case-heritage.webp', 1200, 800),
+                                  ('339f8ff4edfc01d3e8d5056f77d08056', 'case-real-living.webp', 1200, 800),
+                                  ('5cb038ffc8c1b84870446221102a0edb', 'case-farm-focus.webp', 1080, 720),
+                                  ('4b93c37c1e2d3fd5b3aa2ebd56c07883', 'case-st-john.webp', 1200, 800),
+                                  ('a485aeff4ede07fc098b147f24b9cb5e', 'case-udc.webp', 420, 280),
+                                  ('b558046d9b5eac37c58645205fad87ca', 'client-udc.png', 470, 259),
+                                  ('50004d1715faed6350d24da66fcec625', 'sf-data-cloud.png', 72, 72),
+                                  ('9559cdd1caa8a3d962edba927e63c6db', 'sf-agentforce.png', 72, 72),
+                                  ('974845284774c54ea9a9bdfda955608d', 'sf-marketing-cloud.png', 72, 72),
+                                  ('4c89025bfff05147c147a629d74cef73', 'sf-sales-cloud.png', 72, 72),
+                                  ('5c18880b09de9c839069bfedb8a890db', 'sf-service-cloud.png', 72, 72),
+                                  ('17b39e440a0b653a69ada4856efa788f', 'sf-slack.png', 72, 72)]:
+            if blob in src:
+                cls = (' class="%s"' % own) if own else ''
+                return pad + ('<img src="assets/%s" alt="%s"%s width="%d" height="%d" '
+                              'loading="lazy" decoding="async">\n') % (fname, alt, cls, w, h)
         for blob, fname, w, h in [('056670e8f10d448082d96732476903e2', 'stack-hero.webp', 2000, 1125),
                                   ('7a25399c69e4ec438ce149534ac4e0ba', 'nonprofit-one-person.webp', 1920, 1150),
                                   ('573dbbaf76c7353c0dba42041738d9b8', 'stack-cards.webp', 1900, 470),
