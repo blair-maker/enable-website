@@ -72,6 +72,11 @@ def render(n, names, depth=1):
     if n.tag == '__svg__':
         return pad + n.raw + '\n'
     if n.tag == 'img':
+        src = n.attrs.get('src', '')
+        alt = html.escape(n.attrs.get('alt', ''), quote=True)
+        if 'f804320afea9631b2b0476d9c0716114' in src:      # Heritage NZ identity-resolution diagram
+            return pad + ('<img src="assets/hnz-identity-resolution.webp" alt="%s" class="figure" '
+                          'width="2000" height="1000" fetchpriority="high">\n') % alt
         return pad + '<img src="assets/enable-logo-navy.png" alt="Enable Digital" class="logo">\n'
 
     tag = n.tag
@@ -116,6 +121,7 @@ button{font-family:inherit;cursor:pointer}
 input,textarea{font-family:inherit}
 .page{width:100%}
 .logo{height:28px;width:auto;align-self:flex-start;flex:0 0 auto}
+.figure{width:100%;height:auto;border-radius:12px}
 svg{max-width:100%;height:auto}
 :focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
 """]
