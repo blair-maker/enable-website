@@ -154,6 +154,15 @@ svg{max-width:100%;height:auto}
             mobile.append('.%s{padding:44px 24px}' % nm)
         if re.search(r'height:\s*\d{3,}px', st) and 'section' in nm:
             tablet.append('.%s{height:auto}' % nm)
+        # a flex row with a flex-shrink:0 child overflows once the viewport is narrower
+        # than that child: stack every row at phone width
+        if 'display: flex' in st and 'flex-direction: column' not in st:
+            if 'split' in nm:
+                mobile.append('.%s{flex-wrap:wrap;gap:8px}' % nm)
+            else:
+                mobile.append('.%s{flex-direction:column;align-items:stretch}' % nm)
+        if 'flex-shrink: 0' in st:
+            mobile.append('.%s{flex-shrink:1;width:auto;max-width:100%%}' % nm)
 
     out.append('\n@media (max-width:1100px){')
     out.append('.page{max-width:100%}')
@@ -173,7 +182,9 @@ svg{max-width:100%;height:auto}
     out.append('}')
     out.append('\n@media (max-width:760px){')
     out.append('[class*="row"],[class*="hero"]{flex-direction:column;align-items:stretch}')
+    out.append('*{min-width:0}')
     out.append('header{flex-direction:row!important;align-items:center;padding:14px 24px}')
+    out.append('header>a{flex-shrink:0;width:auto}')
     out.append('footer [class*="grid"]{grid-template-columns:1fr 1fr}')
     out.append('svg{min-width:0}')
     out.append('\n'.join(sorted(set(mobile))))
