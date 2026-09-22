@@ -102,7 +102,7 @@ def render(n, names, depth=1):
     return pad + '<%s%s>\n%s%s</%s>\n' % (tag, a, inner, pad, tag)
 
 
-def stylesheet(names, samples):
+def stylesheet(names, samples, used=None):
     out = ["""/* Enable. Generated from the approved artboards by build_static.py.
    Tokens are in tokens.css; this file holds the layout and component classes. */
 
@@ -127,7 +127,7 @@ svg{max-width:100%;height:auto}
 """]
     seen = set()
     for key, nm in sorted(names.items(), key=lambda kv: kv[1]):
-        if nm in seen:
+        if nm in seen or (used is not None and nm not in used):
             continue
         seen.add(nm)
         decl = quantise(samples[key][0]).rstrip(';')
@@ -142,6 +142,8 @@ svg{max-width:100%;height:auto}
     # ---- responsive, per BUILD-GUIDE.md ----
     tablet, mobile = [], []
     for key, nm in sorted(names.items(), key=lambda kv: kv[1]):
+        if used is not None and nm not in used:
+            continue
         st = samples[key][0]
         if re.search(r'width:\s*\d{3,}px', st) and 'max-width' not in st:
             tablet.append('.%s{width:100%%}' % nm)
@@ -203,37 +205,43 @@ svg{max-width:100%;height:auto}
 
 
 def main():
+    import hashlib, glob as _glob
     os.makedirs(os.path.join(OUT, 'assets'), exist_ok=True)
     counts, samples, trees = {}, {}, {}
     for stem, _, _ in PAGES:                       # pass 1: tally every inline style
         trees[stem] = collect(stem, counts, samples)
     names = name_classes(counts, samples)          # commonest style in each group takes the bare name
 
-    open(os.path.join(OUT, 'styles.css'), 'w').write(stylesheet(names, samples))
-
-    for stem, slug, title in PAGES:                # pass 2: emit the pages
-        t = trees[stem]
-        wrapper = t.root.kids[0]
+    # pass 2: render the pages, and note which classes they actually use
+    bodies, used = {}, set()
+    for stem, slug, title in PAGES:
+        wrapper = trees[stem].root.kids[0]
         inner = ''.join(render(k, names, 2) for k in wrapper.kids)
-        desc = ''
+        bodies[slug] = (inner, title)
+        used.update(re.findall(r'class="([^"]+)"', inner))
+
+    css = stylesheet(names, samples, used)
+    digest = hashlib.sha256(css.encode()).hexdigest()[:10]
+    cssname = 'styles.%s.css' % digest
+    for old in _glob.glob(os.path.join(OUT, 'styles*.css')):
+        os.remove(old)                             # a stale stylesheet is worse than none:
+    open(os.path.join(OUT, cssname), 'w').write(css)   # class names shift between builds
+
+    for slug, (inner, title) in bodies.items():
         doc = ('<!doctype html>\n<html lang="en-NZ">\n<head>\n'
                '<meta charset="utf-8">\n'
                '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
                '<title>%s</title>\n'
-               '<link rel="stylesheet" href="styles.css">\n</head>\n<body>\n'
-               '<div class="page">\n%s</div>\n</body>\n</html>\n') % (html.escape(title), inner)
+               '<link rel="stylesheet" href="%s">\n</head>\n<body>\n'
+               '<div class="page">\n%s</div>\n</body>\n</html>\n') % (html.escape(title), cssname, inner)
         open(os.path.join(OUT, slug + '.html'), 'w').write(doc)
 
     logo = os.path.join(os.path.dirname(SRC), '..', 'enable-logo-navy.png')
     if os.path.exists(logo):
         shutil.copy(logo, os.path.join(OUT, 'assets', 'enable-logo-navy.png'))
 
-    css = open(os.path.join(OUT, 'styles.css')).read()
-    print('%d pages, %d classes, stylesheet %.1f KB'
-          % (len(PAGES), len(set(names.values())), len(css) / 1024))
-    for _, slug, _ in PAGES:
-        p = os.path.join(OUT, slug + '.html')
-        print('  %-32s %6.1f KB' % (slug + '.html', os.path.getsize(p) / 1024))
+    print('%d pages, %d classes used (of %d defined), %s %.1f KB'
+          % (len(PAGES), len(used & set(names.values())), len(set(names.values())), cssname, len(css) / 1024))
 
 
 if __name__ == '__main__':

@@ -13,10 +13,12 @@
 
 # The stylesheet and pages must revalidate, or a fix can sit invisible behind a
 # browser cache for an hour while the deploy looks successful.
+# The stylesheet filename carries a content hash, so it can be cached hard:
+# a new build produces a new filename and the HTML points at it.
 [[headers]]
-  for = "/styles.css"
+  for = "/styles.*.css"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
   for = "/*.html"
