@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our work, described honestly | Enable</title>
-<link rel="stylesheet" href="styles.cc2ad7b38c.css">
+<link rel="stylesheet" href="styles.47fbf7d8a2.css">
 </head>
 <body>
 <div class="page">
@@ -175,5 +175,72 @@
       </div>
     </footer>
 </div>
+<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+Ask Enable</button>
+<div class="agent-scrim" data-agent-scrim hidden></div>
+<aside class="agent-drawer" id="agent-drawer" role="dialog" aria-modal="true" aria-labelledby="agent-drawer-title" aria-hidden="true">
+  <div class="agent-head">
+    <div><div class="agent-name" id="agent-drawer-title">Ask Enable</div><div class="agent-role">Answers about this site, not a sales bot</div></div>
+    <button class="agent-close" type="button" aria-label="Close" data-agent-close><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="agent-body" id="agent-root">
+    <div class="agent-card">
+      <span class="agent-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C2B4B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/></svg></span>
+      <p class="agent-grounding">Grounded in the pages on this site: Waypoint, the product pages, the case studies and the Salesforce practice. It will say when it does not know rather than guess.</p>
+    </div>
+    <p class="agent-msg">What are you trying to do? If you tell me the problem rather than the product, I can point you at the right page, or tell you there is not one.</p>
+    <div class="agent-prompts">
+      <button class="agent-prompt" type="button" data-agent-prompt>What does Waypoint actually include?</button>
+      <button class="agent-prompt" type="button" data-agent-prompt>We are on NPSP. Should we move?</button>
+      <button class="agent-prompt" type="button" data-agent-prompt>Can we sell online without leaving Salesforce?</button>
+      <button class="agent-prompt" type="button" data-agent-prompt>What would this cost?</button>
+    </div>
+    <p class="agent-human">Would rather talk to a person? <a href="contact.html">Blair answers these himself</a>.</p>
+  </div>
+  <div class="agent-foot">
+    <form class="agent-field" data-agent-form>
+      <input class="agent-input" type="text" aria-label="Ask a question" placeholder="Ask about Waypoint, StoreConnect, Data 360…" autocomplete="off">
+      <button class="agent-send" type="submit" aria-label="Send"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
+    <p class="agent-disclaimer">An AI, so check anything that matters. Conversations are not recorded.</p>
+  </div>
+</aside>
+<script>
+(function(){
+  var d=document.getElementById('agent-drawer'), sc=document.querySelector('[data-agent-scrim]'),
+      op=document.querySelector('[data-agent-open]'), fm=document.querySelector('[data-agent-form]'), last=null;
+  if(!d) return;
+  function open(){ last=document.activeElement; d.setAttribute('data-open',''); sc.hidden=false;
+    requestAnimationFrame(function(){ sc.setAttribute('data-open',''); });
+    d.setAttribute('aria-hidden','false'); op.setAttribute('aria-expanded','true');
+    var i=d.querySelector('.agent-input'); if(i) i.focus(); }
+  function close(){ d.removeAttribute('data-open'); sc.removeAttribute('data-open');
+    d.setAttribute('aria-hidden','true'); op.setAttribute('aria-expanded','false');
+    setTimeout(function(){ sc.hidden=true; },280); if(last) last.focus(); }
+  op.addEventListener('click',open);
+  sc.addEventListener('click',close);
+  d.querySelector('[data-agent-close]').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&d.hasAttribute('data-open')) close(); });
+  d.addEventListener('keydown',function(e){                 // keep tab inside the drawer
+    if(e.key!=='Tab') return;
+    var f=d.querySelectorAll('button,input:not([disabled]),a[href],textarea,select');
+    if(!f.length) return; var first=f[0], lastEl=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); lastEl.focus(); }
+    else if(!e.shiftKey&&document.activeElement===lastEl){ e.preventDefault(); first.focus(); }
+  });
+  [].forEach.call(d.querySelectorAll('[data-agent-prompt]'),function(b){
+    b.addEventListener('click',function(){ var i=d.querySelector('.agent-input');
+      i.value=b.textContent.trim(); i.focus();
+      d.dispatchEvent(new CustomEvent('agent:ask',{detail:{text:i.value},bubbles:true})); });
+  });
+  if(fm) fm.addEventListener('submit',function(e){ e.preventDefault();
+    var i=d.querySelector('.agent-input'); if(!i.value.trim()) return;
+    d.dispatchEvent(new CustomEvent('agent:ask',{detail:{text:i.value.trim()},bubbles:true})); });
+  // hand-off point: an agent listens for agent:ask and renders into #agent-root
+  window.EnableAgent={open:open,close:close,root:document.getElementById('agent-root'),
+                      el:d,on:function(fn){ d.addEventListener('agent:ask',function(e){ fn(e.detail.text); }); }};
+})();
+</script>
 </body>
 </html>
