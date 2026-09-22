@@ -40,6 +40,8 @@ PAGES = [
     ('Case3', 'work-farm-focus', 'Case study: Farm Focus | Enable'),
     ('Case4', 'work-st-john', 'Case study: rapid AI delivery at Hato Hone St John | Enable'),
     ('Case5', 'work-udc', 'Case study: UDC Finance | Enable'),
+    ('ProjectCharity', 'work-project-charity',
+     'Best Technical Execution, Marketing Cloud Next ANZ 2026 | Enable'),
 ]
 SLUG = {stem: slug for stem, slug, _ in PAGES}
 DRAWER = '''<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
@@ -363,6 +365,7 @@ def render(n, names, depth=1):
                                   ('4b93c37c1e2d3fd5b3aa2ebd56c07883', 'case-st-john.webp', 1200, 800),
                                   ('a485aeff4ede07fc098b147f24b9cb5e', 'case-udc.webp', 420, 280),
                                   ('b558046d9b5eac37c58645205fad87ca', 'client-udc.png', 470, 259),
+                                  ('849b9b1c149855627b42df410c3be0b9', 'project-charity-poster.webp', 1440, 810),
                                   ('50004d1715faed6350d24da66fcec625', 'sf-data-cloud.png', 72, 72),
                                   ('9559cdd1caa8a3d962edba927e63c6db', 'sf-agentforce.png', 72, 72),
                                   ('974845284774c54ea9a9bdfda955608d', 'sf-marketing-cloud.png', 72, 72),
@@ -549,7 +552,7 @@ def stylesheet(names, samples, used=None):
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--white)}
-img{max-width:100%;display:block}
+img{max-width:100%;height:auto;display:block}
 a{color:var(--green-ink);text-decoration:none}
 a:hover{color:#085434}
 h1,h2,h3,h4{margin:0;letter-spacing:-.02em}
