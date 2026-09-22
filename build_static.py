@@ -489,6 +489,10 @@ def main():
     jsname = 'agent.%s.js' % jsdigest
     for old in _glob.glob(os.path.join(OUT, 'agent.*.js')):
         os.remove(old)
+    keep = {slug + '.html' for _, slug, _ in PAGES}
+    for old in _glob.glob(os.path.join(OUT, '*.html')):
+        if os.path.basename(old) not in keep:
+            os.remove(old)          # a renamed slug must not leave the old page behind
     open(os.path.join(OUT, jsname), 'w').write(agent_js)
 
     for slug, (inner, title) in bodies.items():
