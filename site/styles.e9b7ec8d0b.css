@@ -53,6 +53,24 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.agent-think{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.agent-stars{display:inline-flex;gap:3px;color:var(--green)}
+.agent-stars svg{animation:agent-tw 1.4s ease-in-out infinite}
+.agent-stars svg:nth-child(2){animation-delay:.2s}
+.agent-stars svg:nth-child(3){animation-delay:.4s}
+@keyframes agent-tw{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+.agent-followup{background:var(--mist);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.agent-followup p{font-size:14px;line-height:1.6;color:var(--slate)}
+.agent-followup label{font-size:12.5px;font-weight:600;color:var(--ink)}
+.agent-f-field{display:flex;flex-direction:column;gap:5px}
+.agent-followup input,.agent-followup textarea{border:1px solid var(--hair);border-radius:8px;padding:10px 12px;
+ font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+.agent-followup textarea{resize:vertical;min-height:64px}
+.agent-f-send{background:var(--green);color:var(--ink);border:none;border-radius:999px;padding:12px 22px;
+ font-size:14px;font-weight:600;cursor:pointer;align-self:flex-start;font-family:inherit}
+.agent-f-no{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;
+ padding:0;align-self:flex-start;font-family:inherit}
+@media (prefers-reduced-motion:reduce){.agent-stars svg{animation:none;opacity:.7}}
 .agent-you{align-self:flex-end;max-width:85%;background:var(--ink);color:#fff;font-size:14.5px;line-height:1.5;
  padding:11px 14px;border-radius:12px 12px 3px 12px;margin:0}
 .agent-answer{border-left:2px solid var(--green);padding-left:14px;display:flex;flex-direction:column;gap:7px}

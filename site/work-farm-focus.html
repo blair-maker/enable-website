@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Case study: Farm Focus | Enable</title>
-<link rel="stylesheet" href="styles.738610c141.css">
+<link rel="stylesheet" href="styles.e9b7ec8d0b.css">
 </head>
 <body>
 <div class="page">
@@ -141,6 +141,11 @@
 <button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 Ask Enable</button>
+<form name="enable-drawer" data-netlify="true" netlify-honeypot="company" hidden>
+  <input type="hidden" name="form-name" value="enable-drawer">
+  <input type="text" name="name"><input type="email" name="email"><input type="text" name="company">
+  <textarea name="message"></textarea><input type="text" name="asked">
+</form>
 <div class="agent-scrim" data-agent-scrim hidden></div>
 <aside class="agent-drawer" id="agent-drawer" role="dialog" aria-modal="true" aria-labelledby="agent-drawer-title" aria-hidden="true">
   <div class="agent-head">
@@ -183,7 +188,7 @@ Ask Enable</button>
     setTimeout(function(){ sc.hidden=true; },280); if(last) last.focus(); }
   var loaded=false;
   function boot(){ if(loaded) return; loaded=true;
-    var sc2=document.createElement('script'); sc2.src='agent.a892609202.js'; sc2.defer=true; document.body.appendChild(sc2); }
+    var sc2=document.createElement('script'); sc2.src='agent.72601b6ee2.js'; sc2.defer=true; document.body.appendChild(sc2); }
   op.addEventListener('click',function(){ boot(); open(); });
   sc.addEventListener('click',close);
   d.querySelector('[data-agent-close]').addEventListener('click',close);

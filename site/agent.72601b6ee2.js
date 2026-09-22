@@ -55,6 +55,59 @@
 
   function el(tag, cls, txt){ var n=document.createElement(tag); if(cls) n.className=cls; if(txt) n.textContent=txt; return n; }
 
+  var STAR = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+    + '<path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/></svg>';
+
+  function thinking(root){
+    var box = el('div','agent-think');
+    var stars = el('span','agent-stars'); stars.innerHTML = STAR+STAR+STAR;
+    var label = el('span',null,'Reading the site');
+    box.appendChild(stars); box.appendChild(label); root.appendChild(box);
+    root.scrollTop = root.scrollHeight;
+    var lines = ['Reading the site','Finding the passage','Checking what it says'], i = 0;
+    var t = setInterval(function(){ i++; if(i<lines.length) label.textContent = lines[i]; }, 620);
+    return function(){ clearInterval(t); box.remove(); };
+  }
+
+  function followUp(root, asked){
+    if(root.querySelector('.agent-followup')) return;
+    var box = el('div','agent-followup');
+    box.appendChild(el('p',null,'Did that answer it? If you would rather talk it through, leave your details '
+      + 'and Blair will come back to you. He replies to everything.'));
+    var f = document.createElement('form');
+    f.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+    [['name','Your name','text'],['email','Email','email']].forEach(function(spec){
+      var w = el('div','agent-f-field');
+      var l = el('label',null,spec[1]); l.setAttribute('for','af-'+spec[0]);
+      var inp = document.createElement('input');
+      inp.id='af-'+spec[0]; inp.name=spec[0]; inp.type=spec[2]; inp.required=true; inp.autocomplete=spec[0];
+      w.appendChild(l); w.appendChild(inp); f.appendChild(w);
+    });
+    var w3 = el('div','agent-f-field');
+    var l3 = el('label',null,'What are you trying to do?'); l3.setAttribute('for','af-message');
+    var ta = document.createElement('textarea'); ta.id='af-message'; ta.name='message'; ta.value = asked || '';
+    w3.appendChild(l3); w3.appendChild(ta); f.appendChild(w3);
+    var send = el('button','agent-f-send','Send it to Blair'); send.type='submit'; f.appendChild(send);
+    var no = el('button','agent-f-no','No thanks, just browsing'); no.type='button';
+    no.addEventListener('click', function(){ box.remove(); }); f.appendChild(no);
+
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      // f.name is the form's own name attribute, not the input - go through elements
+      var data = new URLSearchParams({ 'form-name':'enable-drawer', name:f.elements.name.value,
+                                       email:f.elements.email.value, message:f.elements.message.value,
+                                       asked:asked||'' });
+      send.disabled = true; send.textContent = 'Sending…';
+      fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:data.toString()})
+        .then(function(){ box.innerHTML='';
+          box.appendChild(el('p',null,'That is with Blair. He replies to everything, usually the same working day.')); })
+        .catch(function(){ box.innerHTML='';
+          var pEl=el('p',null,'That did not send. Email blair@enabledigital.co and it will get there.');
+          box.appendChild(pEl); });
+    });
+    box.appendChild(f); root.appendChild(box); root.scrollTop = root.scrollHeight;
+  }
+
   function respond(q){
     var root = document.getElementById('agent-root');
     var intro = root.querySelector('.agent-prompts'); if(intro) intro.remove();
@@ -62,8 +115,14 @@
     var msg = root.querySelector('.agent-msg'); if(msg) msg.remove();
 
     root.appendChild(el('p','agent-you', q));
+    var i0 = document.querySelector('.agent-input'); if(i0) i0.value = '';
+    var done = thinking(root);
     var hits = search(q);
+    // a considered pause: the answer is ready instantly, but arriving instantly reads as a lookup
+    setTimeout(function(){ done(); paint(q, hits, root); }, 900 + Math.min(hits.length,3) * 220);
+  }
 
+  function paint(q, hits, root){
     if(!hits.length || hits[0].s < 2.5){
       var miss = el('div','agent-answer');
       miss.appendChild(el('p','agent-msg',
@@ -77,12 +136,13 @@
         box.appendChild(el('p','agent-msg', snippet(hit.e.x, q)));
         var a = el('a','agent-cite', 'Read it on ' + hit.e.t.split('|')[0].split(':')[0].trim());
         a.href = hit.e.p + '.html';
+        a.target = '_blank'; a.rel = 'noopener';   // keep the drawer alive behind the page they opened
+        a.addEventListener('click', function(){ setTimeout(function(){ followUp(root, q); }, 1200); });
         box.appendChild(a);
         root.appendChild(box);
       });
     }
     root.scrollTop = root.scrollHeight;
-    var i = document.querySelector('.agent-input'); if(i) i.value = '';
   }
 
   if(window.EnableAgent) window.EnableAgent.on(respond);

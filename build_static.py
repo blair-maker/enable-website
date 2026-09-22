@@ -35,6 +35,11 @@ SLUG = {stem: slug for stem, slug, _ in PAGES}
 DRAWER = '''<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 Ask Enable</button>
+<form name="enable-drawer" data-netlify="true" netlify-honeypot="company" hidden>
+  <input type="hidden" name="form-name" value="enable-drawer">
+  <input type="text" name="name"><input type="email" name="email"><input type="text" name="company">
+  <textarea name="message"></textarea><input type="text" name="asked">
+</form>
 <div class="agent-scrim" data-agent-scrim hidden></div>
 <aside class="agent-drawer" id="agent-drawer" role="dialog" aria-modal="true" aria-labelledby="agent-drawer-title" aria-hidden="true">
   <div class="agent-head">
@@ -161,6 +166,59 @@ AGENT_JS = r'''
 
   function el(tag, cls, txt){ var n=document.createElement(tag); if(cls) n.className=cls; if(txt) n.textContent=txt; return n; }
 
+  var STAR = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+    + '<path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/></svg>';
+
+  function thinking(root){
+    var box = el('div','agent-think');
+    var stars = el('span','agent-stars'); stars.innerHTML = STAR+STAR+STAR;
+    var label = el('span',null,'Reading the site');
+    box.appendChild(stars); box.appendChild(label); root.appendChild(box);
+    root.scrollTop = root.scrollHeight;
+    var lines = ['Reading the site','Finding the passage','Checking what it says'], i = 0;
+    var t = setInterval(function(){ i++; if(i<lines.length) label.textContent = lines[i]; }, 620);
+    return function(){ clearInterval(t); box.remove(); };
+  }
+
+  function followUp(root, asked){
+    if(root.querySelector('.agent-followup')) return;
+    var box = el('div','agent-followup');
+    box.appendChild(el('p',null,'Did that answer it? If you would rather talk it through, leave your details '
+      + 'and Blair will come back to you. He replies to everything.'));
+    var f = document.createElement('form');
+    f.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+    [['name','Your name','text'],['email','Email','email']].forEach(function(spec){
+      var w = el('div','agent-f-field');
+      var l = el('label',null,spec[1]); l.setAttribute('for','af-'+spec[0]);
+      var inp = document.createElement('input');
+      inp.id='af-'+spec[0]; inp.name=spec[0]; inp.type=spec[2]; inp.required=true; inp.autocomplete=spec[0];
+      w.appendChild(l); w.appendChild(inp); f.appendChild(w);
+    });
+    var w3 = el('div','agent-f-field');
+    var l3 = el('label',null,'What are you trying to do?'); l3.setAttribute('for','af-message');
+    var ta = document.createElement('textarea'); ta.id='af-message'; ta.name='message'; ta.value = asked || '';
+    w3.appendChild(l3); w3.appendChild(ta); f.appendChild(w3);
+    var send = el('button','agent-f-send','Send it to Blair'); send.type='submit'; f.appendChild(send);
+    var no = el('button','agent-f-no','No thanks, just browsing'); no.type='button';
+    no.addEventListener('click', function(){ box.remove(); }); f.appendChild(no);
+
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      // f.name is the form's own name attribute, not the input - go through elements
+      var data = new URLSearchParams({ 'form-name':'enable-drawer', name:f.elements.name.value,
+                                       email:f.elements.email.value, message:f.elements.message.value,
+                                       asked:asked||'' });
+      send.disabled = true; send.textContent = 'Sending…';
+      fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:data.toString()})
+        .then(function(){ box.innerHTML='';
+          box.appendChild(el('p',null,'That is with Blair. He replies to everything, usually the same working day.')); })
+        .catch(function(){ box.innerHTML='';
+          var pEl=el('p',null,'That did not send. Email blair@enabledigital.co and it will get there.');
+          box.appendChild(pEl); });
+    });
+    box.appendChild(f); root.appendChild(box); root.scrollTop = root.scrollHeight;
+  }
+
   function respond(q){
     var root = document.getElementById('agent-root');
     var intro = root.querySelector('.agent-prompts'); if(intro) intro.remove();
@@ -168,8 +226,14 @@ AGENT_JS = r'''
     var msg = root.querySelector('.agent-msg'); if(msg) msg.remove();
 
     root.appendChild(el('p','agent-you', q));
+    var i0 = document.querySelector('.agent-input'); if(i0) i0.value = '';
+    var done = thinking(root);
     var hits = search(q);
+    // a considered pause: the answer is ready instantly, but arriving instantly reads as a lookup
+    setTimeout(function(){ done(); paint(q, hits, root); }, 900 + Math.min(hits.length,3) * 220);
+  }
 
+  function paint(q, hits, root){
     if(!hits.length || hits[0].s < 2.5){
       var miss = el('div','agent-answer');
       miss.appendChild(el('p','agent-msg',
@@ -183,12 +247,13 @@ AGENT_JS = r'''
         box.appendChild(el('p','agent-msg', snippet(hit.e.x, q)));
         var a = el('a','agent-cite', 'Read it on ' + hit.e.t.split('|')[0].split(':')[0].trim());
         a.href = hit.e.p + '.html';
+        a.target = '_blank'; a.rel = 'noopener';   // keep the drawer alive behind the page they opened
+        a.addEventListener('click', function(){ setTimeout(function(){ followUp(root, q); }, 1200); });
         box.appendChild(a);
         root.appendChild(box);
       });
     }
     root.scrollTop = root.scrollHeight;
-    var i = document.querySelector('.agent-input'); if(i) i.value = '';
   }
 
   if(window.EnableAgent) window.EnableAgent.on(respond);
@@ -372,6 +437,24 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.agent-think{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.agent-stars{display:inline-flex;gap:3px;color:var(--green)}
+.agent-stars svg{animation:agent-tw 1.4s ease-in-out infinite}
+.agent-stars svg:nth-child(2){animation-delay:.2s}
+.agent-stars svg:nth-child(3){animation-delay:.4s}
+@keyframes agent-tw{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+.agent-followup{background:var(--mist);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.agent-followup p{font-size:14px;line-height:1.6;color:var(--slate)}
+.agent-followup label{font-size:12.5px;font-weight:600;color:var(--ink)}
+.agent-f-field{display:flex;flex-direction:column;gap:5px}
+.agent-followup input,.agent-followup textarea{border:1px solid var(--hair);border-radius:8px;padding:10px 12px;
+ font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+.agent-followup textarea{resize:vertical;min-height:64px}
+.agent-f-send{background:var(--green);color:var(--ink);border:none;border-radius:999px;padding:12px 22px;
+ font-size:14px;font-weight:600;cursor:pointer;align-self:flex-start;font-family:inherit}
+.agent-f-no{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;
+ padding:0;align-self:flex-start;font-family:inherit}
+@media (prefers-reduced-motion:reduce){.agent-stars svg{animation:none;opacity:.7}}
 .agent-you{align-self:flex-end;max-width:85%;background:var(--ink);color:#fff;font-size:14.5px;line-height:1.5;
  padding:11px 14px;border-radius:12px 12px 3px 12px;margin:0}
 .agent-answer{border-left:2px solid var(--green);padding-left:14px;display:flex;flex-direction:column;gap:7px}
