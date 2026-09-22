@@ -28,7 +28,8 @@ PAGES = [
     ('CaseStudies', 'work', 'Our work, described honestly | Enable'),
     ('Case1', 'work-heritage', 'Case study: six systems, one supporter profile | Enable'),
     ('Case2', 'work-retirement-living', 'Case study: when every enquiry reaches one person | Enable'),
-    ('Case3', 'work-marketing-cloud-next', 'Case study: first Marketing Cloud Next in APAC | Enable'),
+    ('Case3', 'work-farm-focus', 'Case study: Farm Focus | Enable'),
+    ('Case4', 'work-st-john', 'Case study: rapid AI delivery at Hato Hone St John | Enable'),
 ]
 SLUG = {stem: slug for stem, slug, _ in PAGES}
 DRAWER = '''<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
