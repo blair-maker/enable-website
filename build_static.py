@@ -84,15 +84,15 @@ def render(n, names, depth=1):
                 px = m2.group(1) if m2 else '28'
                 return pad + ('<img src="assets/%s" alt="%s" class="%s" style="height:%spx" '
                               'width="%d" height="%d">\n') % (fname, alt, cls, px, w, h)
-        if '7a25399c69e4ec438ce149534ac4e0ba' in src:      # nonprofit: one person, four relationships
-            return pad + ('<img src="assets/nonprofit-one-person.webp" alt="%s" class="figure" '
-                          'width="1920" height="1150" fetchpriority="high">\n') % alt
-        if '573dbbaf76c7353c0dba42041738d9b8' in src:      # four-layer stack cards, cropped from the supplied image
-            return pad + ('<img src="assets/stack-cards.webp" alt="%s" class="figure" '
-                          'width="1900" height="470" fetchpriority="high">\n') % alt
-        if 'f804320afea9631b2b0476d9c0716114' in src:      # Heritage NZ identity-resolution diagram
-            return pad + ('<img src="assets/hnz-identity-resolution.webp" alt="%s" class="figure" '
-                          'width="2000" height="1000" fetchpriority="high">\n') % alt
+        own = names.get(norm(n.attrs['style'])) if n.attrs.get('style') else None
+        for blob, fname, w, h in [('7a25399c69e4ec438ce149534ac4e0ba', 'nonprofit-one-person.webp', 1920, 1150),
+                                  ('573dbbaf76c7353c0dba42041738d9b8', 'stack-cards.webp', 1900, 470),
+                                  ('f804320afea9631b2b0476d9c0716114', 'hnz-identity-resolution.webp', 2000, 1000)]:
+            if blob in src:
+                # keep the artboard's own sizing class: it carries max-width and flex behaviour
+                cls = (own + ' figure') if own else 'figure'
+                return pad + ('<img src="assets/%s" alt="%s" class="%s" width="%d" height="%d" '
+                              'fetchpriority="high">\n') % (fname, alt, cls, w, h)
         return pad + '<img src="assets/enable-logo-navy.png" alt="Enable Digital" class="logo">\n'
 
     tag = n.tag
@@ -137,7 +137,7 @@ button{font-family:inherit;cursor:pointer}
 input,textarea{font-family:inherit}
 .page{width:100%}
 .logo{height:28px;width:auto;align-self:flex-start;flex:0 0 auto}
-.figure{width:100%;height:auto;border-radius:12px}
+.figure{height:auto;max-width:100%}
 .logo-product{width:auto;align-self:flex-start;flex:0 0 auto;max-width:100%}
 svg{max-width:100%;height:auto}
 :focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
@@ -235,7 +235,8 @@ def main():
         wrapper = trees[stem].root.kids[0]
         inner = ''.join(render(k, names, 2) for k in wrapper.kids)
         bodies[slug] = (inner, title)
-        used.update(re.findall(r'class="([^"]+)"', inner))
+        for attr in re.findall(r'class="([^"]+)"', inner):
+            used.update(attr.split())      # multi-class attrs, or rules get pruned
 
     css = stylesheet(names, samples, used)
     digest = hashlib.sha256(css.encode()).hexdigest()[:10]
