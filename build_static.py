@@ -5,7 +5,7 @@ and responsive rules are generated for the breakpoints in BUILD-GUIDE.md.
 
 Run: python3 build_static.py
 """
-import os, re, html, shutil, sys
+import os, re, html, shutil, sys, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wf_transpile import Tree, norm, infer_name, quantise
 
@@ -74,7 +74,10 @@ Ask Enable</button>
   function close(){ d.removeAttribute('data-open'); sc.removeAttribute('data-open');
     d.setAttribute('aria-hidden','true'); op.setAttribute('aria-expanded','false');
     setTimeout(function(){ sc.hidden=true; },280); if(last) last.focus(); }
-  op.addEventListener('click',open);
+  var loaded=false;
+  function boot(){ if(loaded) return; loaded=true;
+    var sc2=document.createElement('script'); sc2.src='__AGENTJS__'; sc2.defer=true; document.body.appendChild(sc2); }
+  op.addEventListener('click',function(){ boot(); open(); });
   sc.addEventListener('click',close);
   d.querySelector('[data-agent-close]').addEventListener('click',close);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&d.hasAttribute('data-open')) close(); });
@@ -98,6 +101,98 @@ Ask Enable</button>
                       el:d,on:function(fn){ d.addEventListener('agent:ask',function(e){ fn(e.detail.text); }); }};
 })();
 </script>
+'''
+
+AGENT_JS = r'''
+/* Enable answer engine. Retrieval over this site's own pages, built at deploy time.
+   No model, no backend: it finds the passage that actually answers and cites the page. */
+(function(){
+  var INDEX = __INDEX__;
+  var STOP = {the:1,a:1,an:1,and:1,or:1,of:1,to:1,in:1,on:1,for:1,with:1,is:1,are:1,was:1,be:1,do:1,does:1,
+    we:1,you:1,i:1,it:1,that:1,this:1,what:1,how:1,can:1,should:1,our:1,your:1,my:1,at:1,as:1,by:1,from:1,
+    have:1,has:1,will:1,would:1,if:1,about:1,me:1,us:1,they:1,there:1,their:1,but:1,not:1,so:1,any:1};
+
+  function toks(str){
+    return (str||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/)
+      .filter(function(w){ return w && w.length>2 && !STOP[w]; })
+      .map(function(w){ return w.replace(/(ies)$/,'y').replace(/(es|s)$/,''); });
+  }
+
+  var DF = {}, N = INDEX.length;
+  INDEX.forEach(function(e){
+    var seen = {};
+    toks(e.h+' '+e.x).forEach(function(w){ if(!seen[w]){ seen[w]=1; DF[w]=(DF[w]||0)+1; } });
+  });
+  function idf(w){ return Math.log(1 + N/(1+(DF[w]||0))); }
+
+  function search(q){
+    var qt = toks(q); if(!qt.length) return [];
+    return INDEX.map(function(e){
+      var h = toks(e.h), x = toks(e.x), ttl = toks(e.t + ' ' + e.p), sc = 0, hit = 0;
+      qt.forEach(function(w){
+        var inT = ttl.indexOf(w)>=0 ? 1 : 0;
+        var inH = h.indexOf(w)>=0 ? 1 : 0;
+        var n = 0; for(var i=0;i<x.length;i++) if(x[i]===w) n++;
+        if(inT || inH || n){
+          hit++;
+          // square the idf so a distinctive word like "waypoint" outweighs "actually"
+          sc += Math.pow(idf(w), 2) * (inT*4 + inH*3 + Math.min(n,3));
+        }
+      });
+      // answering half the question is worth less than half as much
+      return {e:e, s:sc * Math.pow(hit/qt.length, 2)};
+    }).filter(function(r){ return r.s > 0; })
+      .sort(function(a,b){ return b.s-a.s; }).slice(0,3);
+  }
+
+  function snippet(text, q){
+    var qt = toks(q);
+    var sents = text.split(/(?<=[.!?])\s+/);
+    var best = sents[0], bestScore = -1;
+    sents.forEach(function(sn){
+      var t = toks(sn), sc = 0;
+      qt.forEach(function(w){ if(t.indexOf(w)>=0) sc++; });
+      if(sc > bestScore){ bestScore = sc; best = sn; }
+    });
+    var i = sents.indexOf(best);
+    return sents.slice(i, i+2).join(' ').trim();
+  }
+
+  function el(tag, cls, txt){ var n=document.createElement(tag); if(cls) n.className=cls; if(txt) n.textContent=txt; return n; }
+
+  function respond(q){
+    var root = document.getElementById('agent-root');
+    var intro = root.querySelector('.agent-prompts'); if(intro) intro.remove();
+    var card = root.querySelector('.agent-card'); if(card) card.remove();
+    var msg = root.querySelector('.agent-msg'); if(msg) msg.remove();
+
+    root.appendChild(el('p','agent-you', q));
+    var hits = search(q);
+
+    if(!hits.length || hits[0].s < 2.5){
+      var miss = el('div','agent-answer');
+      miss.appendChild(el('p','agent-msg',
+        'I cannot find that on this site, and I would rather say so than guess. Blair will know.'));
+      var a = el('a','agent-cite','Ask him directly'); a.href='contact.html';
+      miss.appendChild(a); root.appendChild(miss);
+    } else {
+      hits.slice(0,2).forEach(function(hit){
+        var box = el('div','agent-answer');
+        box.appendChild(el('div','agent-answer-h', hit.e.h));
+        box.appendChild(el('p','agent-msg', snippet(hit.e.x, q)));
+        var a = el('a','agent-cite', 'Read it on ' + hit.e.t.split('|')[0].split(':')[0].trim());
+        a.href = hit.e.p + '.html';
+        box.appendChild(a);
+        root.appendChild(box);
+      });
+    }
+    root.scrollTop = root.scrollHeight;
+    var i = document.querySelector('.agent-input'); if(i) i.value = '';
+  }
+
+  if(window.EnableAgent) window.EnableAgent.on(respond);
+  window.EnableAgent.answer = respond;
+})();
 '''
 
 INLINE_OK = {'href', 'alt', 'id', 'role', 'aria-label', 'aria-hidden', 'for', 'type', 'rows', 'lang'}
@@ -188,6 +283,34 @@ def render(n, names, depth=1):
     return pad + '<%s%s>\n%s%s</%s>\n' % (tag, a, inner, pad, tag)
 
 
+def build_index(bodies, slugs):
+    """Pull heading + prose pairs out of the rendered pages, so the drawer can answer
+    from what the site actually says rather than from anything invented."""
+    import html as _h
+    entries = []
+    for slug, (inner, title) in bodies.items():
+        # headings and paragraphs in document order
+        toks = re.findall(r'<(h1|h2|h3)[^>]*>(.*?)</\1>|<p[^>]*>(.*?)</p>', inner, re.S)
+        heading, buf = title, []
+
+        def flush():
+            text = ' '.join(buf).strip()
+            if len(text) > 80:
+                entries.append({'p': slug, 't': title, 'h': heading, 'x': text[:520]})
+
+        for h_tag, h_txt, p_txt in toks:
+            if h_tag:
+                flush(); buf = []
+                heading = _h.unescape(re.sub(r'<[^>]+>', '', h_txt)).strip()
+            elif p_txt:
+                t = _h.unescape(re.sub(r'<[^>]+>', ' ', p_txt))
+                t = re.sub(r'\s+', ' ', t).strip()
+                if t:
+                    buf.append(t)
+        flush()
+    return entries
+
+
 def stylesheet(names, samples, used=None):
     out = ["""/* Enable. Generated from the approved artboards by build_static.py.
    Tokens are in tokens.css; this file holds the layout and component classes. */
@@ -244,6 +367,11 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.agent-you{align-self:flex-end;max-width:85%;background:var(--ink);color:#fff;font-size:14.5px;line-height:1.5;
+ padding:11px 14px;border-radius:12px 12px 3px 12px;margin:0}
+.agent-answer{border-left:2px solid var(--green);padding-left:14px;display:flex;flex-direction:column;gap:7px}
+.agent-answer-h{font-size:13px;font-weight:600;color:var(--ink)}
+.agent-cite{font-size:13px;font-weight:600;color:var(--green-ink);text-decoration:underline;align-self:flex-start}
 .agent-disclaimer{font-size:11.5px;line-height:1.5;color:var(--muted);margin-top:10px}
 @media (max-width:560px){.agent-drawer{width:100vw}.agent-launch{right:16px;bottom:16px}}
 @media (prefers-reduced-motion:reduce){.agent-drawer,.agent-scrim{transition:none}}
@@ -354,19 +482,29 @@ def main():
         os.remove(old)                             # a stale stylesheet is worse than none:
     open(os.path.join(OUT, cssname), 'w').write(css)   # class names shift between builds
 
+    entries = build_index(bodies, None)
+    agent_js = AGENT_JS.replace('__INDEX__', json.dumps(entries, separators=(',', ':')))
+    jsdigest = hashlib.sha256(agent_js.encode()).hexdigest()[:10]
+    jsname = 'agent.%s.js' % jsdigest
+    for old in _glob.glob(os.path.join(OUT, 'agent.*.js')):
+        os.remove(old)
+    open(os.path.join(OUT, jsname), 'w').write(agent_js)
+
     for slug, (inner, title) in bodies.items():
         doc = ('<!doctype html>\n<html lang="en-NZ">\n<head>\n'
                '<meta charset="utf-8">\n'
                '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
                '<title>%s</title>\n'
                '<link rel="stylesheet" href="%s">\n</head>\n<body>\n'
-               '<div class="page">\n%s</div>\n' + DRAWER + '</body>\n</html>\n') % (html.escape(title), cssname, inner)
+               '<div class="page">\n%s</div>\n' + DRAWER.replace('__AGENTJS__', jsname)
+               + '</body>\n</html>\n') % (html.escape(title), cssname, inner)
         open(os.path.join(OUT, slug + '.html'), 'w').write(doc)
 
     logo = os.path.join(os.path.dirname(SRC), '..', 'enable-logo-navy.png')
     if os.path.exists(logo):
         shutil.copy(logo, os.path.join(OUT, 'assets', 'enable-logo-navy.png'))
 
+    print('answer index: %d passages, %s %.1f KB' % (len(entries), jsname, len(agent_js) / 1024))
     print('%d pages, %d classes used (of %d defined), %s %.1f KB'
           % (len(PAGES), len(used & set(names.values())), len(set(names.values())), cssname, len(css) / 1024))
 

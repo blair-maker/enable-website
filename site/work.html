@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our work, described honestly | Enable</title>
-<link rel="stylesheet" href="styles.47fbf7d8a2.css">
+<link rel="stylesheet" href="styles.e15e4127a0.css">
 </head>
 <body>
 <div class="page">
@@ -218,7 +218,10 @@ Ask Enable</button>
   function close(){ d.removeAttribute('data-open'); sc.removeAttribute('data-open');
     d.setAttribute('aria-hidden','true'); op.setAttribute('aria-expanded','false');
     setTimeout(function(){ sc.hidden=true; },280); if(last) last.focus(); }
-  op.addEventListener('click',open);
+  var loaded=false;
+  function boot(){ if(loaded) return; loaded=true;
+    var sc2=document.createElement('script'); sc2.src='agent.3f518faf00.js'; sc2.defer=true; document.body.appendChild(sc2); }
+  op.addEventListener('click',function(){ boot(); open(); });
   sc.addEventListener('click',close);
   d.querySelector('[data-agent-close]').addEventListener('click',close);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&d.hasAttribute('data-open')) close(); });

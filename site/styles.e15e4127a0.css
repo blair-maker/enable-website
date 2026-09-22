@@ -53,6 +53,11 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.agent-you{align-self:flex-end;max-width:85%;background:var(--ink);color:#fff;font-size:14.5px;line-height:1.5;
+ padding:11px 14px;border-radius:12px 12px 3px 12px;margin:0}
+.agent-answer{border-left:2px solid var(--green);padding-left:14px;display:flex;flex-direction:column;gap:7px}
+.agent-answer-h{font-size:13px;font-weight:600;color:var(--ink)}
+.agent-cite{font-size:13px;font-weight:600;color:var(--green-ink);text-decoration:underline;align-self:flex-start}
 .agent-disclaimer{font-size:11.5px;line-height:1.5;color:var(--muted);margin-top:10px}
 @media (max-width:560px){.agent-drawer{width:100vw}.agent-launch{right:16px;bottom:16px}}
 @media (prefers-reduced-motion:reduce){.agent-drawer,.agent-scrim{transition:none}}
