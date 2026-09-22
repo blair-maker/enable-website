@@ -74,6 +74,9 @@ def render(n, names, depth=1):
     if n.tag == 'img':
         src = n.attrs.get('src', '')
         alt = html.escape(n.attrs.get('alt', ''), quote=True)
+        if '573dbbaf76c7353c0dba42041738d9b8' in src:      # four-layer stack cards, cropped from the supplied image
+            return pad + ('<img src="assets/stack-cards.webp" alt="%s" class="figure" '
+                          'width="1900" height="470" fetchpriority="high">\n') % alt
         if 'f804320afea9631b2b0476d9c0716114' in src:      # Heritage NZ identity-resolution diagram
             return pad + ('<img src="assets/hnz-identity-resolution.webp" alt="%s" class="figure" '
                           'width="2000" height="1000" fetchpriority="high">\n') % alt
