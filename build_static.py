@@ -74,6 +74,16 @@ def render(n, names, depth=1):
     if n.tag == 'img':
         src = n.attrs.get('src', '')
         alt = html.escape(n.attrs.get('alt', ''), quote=True)
+        for blob, fname, w, h in [('8d66061b576bc2104feb2af562bb134e', 'logo-gridmate.svg', 182, 38),
+                                  ('1735550ab6564ff2f04f1d10e52b11e3', 'logo-lumin.svg', 126, 28),
+                                  ('4c6351deefdaaf2f3f56f4676f9c543d', 'logo-storeconnect.jpg', 1085, 184)]:
+            if blob in src:
+                cls = 'logo-product'
+                st = n.attrs.get('style', '')
+                m2 = re.search(r'height:\s*(\d+)px', st)
+                px = m2.group(1) if m2 else '28'
+                return pad + ('<img src="assets/%s" alt="%s" class="%s" style="height:%spx" '
+                              'width="%d" height="%d">\n') % (fname, alt, cls, px, w, h)
         if '573dbbaf76c7353c0dba42041738d9b8' in src:      # four-layer stack cards, cropped from the supplied image
             return pad + ('<img src="assets/stack-cards.webp" alt="%s" class="figure" '
                           'width="1900" height="470" fetchpriority="high">\n') % alt
@@ -125,6 +135,7 @@ input,textarea{font-family:inherit}
 .page{width:100%}
 .logo{height:28px;width:auto;align-self:flex-start;flex:0 0 auto}
 .figure{width:100%;height:auto;border-radius:12px}
+.logo-product{width:auto;align-self:flex-start;flex:0 0 auto;max-width:100%}
 svg{max-width:100%;height:auto}
 :focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
 """]
