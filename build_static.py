@@ -239,7 +239,11 @@ def render(n, names, depth=1):
     if n.tag == 'img':
         src = n.attrs.get('src', '')
         alt = html.escape(n.attrs.get('alt', ''), quote=True)
-        for blob, fname, w, h in [('8d66061b576bc2104feb2af562bb134e', 'logo-gridmate.svg', 182, 38),
+        for blob, fname, w, h in [('c7e26ded6e55f89e6455c7367dd1089b', 'client-heritage.svg', 60, 49),
+                                  ('c3e8dc2293d25390284df6aa749d6a11', 'client-realliving.svg', 270, 65),
+                                  ('280dbb6c7d3cb0003ea400be530dc064', 'client-farmfocus.png', 2000, 860),
+                                  ('ac44c2678b1924fe010da0da783e6cb3', 'client-stjohn.png', 70, 76),
+                                  ('8d66061b576bc2104feb2af562bb134e', 'logo-gridmate.svg', 182, 38),
                                   ('1735550ab6564ff2f04f1d10e52b11e3', 'logo-lumin.svg', 126, 28),
                                   ('4c6351deefdaaf2f3f56f4676f9c543d', 'logo-storeconnect.jpg', 1085, 184)]:
             if blob in src:
