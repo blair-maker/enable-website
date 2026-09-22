@@ -1,0 +1,20 @@
+# Enable. Works on Netlify and Cloudflare Pages unchanged.
+# Old URLs first, so nothing that has been linked or campaigned lands on a 404.
+
+/quick-starts            /waypoint.html                     301
+/services                /salesforce.html                   301
+/training                /waypoint.html                     301
+/about                   /about.html                        301
+/contact                 /contact.html                      301
+/work                    /work.html                         301
+/storeconnect            /storeconnect.html                 301
+/waypoint                /waypoint.html                     301
+/salesforce              /salesforce.html                   301
+/lumin                   /lumin.html                        301
+/gridmate                /gridmate.html                     301
+/nonprofit               /nonprofit.html                    301
+/nonprofit/npsp-migration  /npsp-migration.html             301
+/marketing-cloud-next    /marketing-cloud-next.html         301
+/work/heritage-unified-profile        /work-heritage.html               301
+/work/retirement-living-routing       /work-retirement-living.html      301
+/work/first-marketing-cloud-next-apac /work-marketing-cloud-next.html   301
