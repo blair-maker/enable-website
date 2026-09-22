@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GridMate for Salesforce, implementation partner | Enable</title>
-<link rel="stylesheet" href="styles.e9b7ec8d0b.css">
+<link rel="stylesheet" href="styles.b682e5a304.css">
 </head>
 <body>
 <div class="page">
@@ -15,7 +15,7 @@
       <nav class="row-5">
         <a class="wrap-2" href="index.html">The stack</a>
         <a class="wrap-2" href="salesforce.html">Salesforce</a>
-        <a class="wrap-9" href="lumin.html">Products</a>
+        <div class="nav-group" data-on data-nav-group><button class="wrap-9 nav-trigger" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="nav-products">Products<svg width="10" height="7" viewBox="0 0 10 7" aria-hidden="true"><path d="M1 1.5L5 5.5L9 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="nav-menu" id="nav-products" role="menu"><a class="nav-item" role="menuitem" href="lumin.html"><span class="nav-item-t">Lumin</span><span class="nav-item-d">Agreements signed and filed without leaving Salesforce</span></a><a class="nav-item" role="menuitem" href="gridmate.html" aria-current="page"><span class="nav-item-t">GridMate</span><span class="nav-item-d">Spreadsheet-speed editing, and RevenueMate for quoting</span></a><a class="nav-item" role="menuitem" href="storeconnect.html"><span class="nav-item-t">StoreConnect</span><span class="nav-item-d">Storefront and point of sale, natively on Salesforce</span></a></div></div>
         <a class="wrap-2" href="waypoint.html">Waypoint</a>
         <a class="wrap-2" href="nonprofit.html">Nonprofit</a>
         <a class="wrap-2" href="marketing-cloud-next.html">Marketing</a>
@@ -230,7 +230,7 @@ Ask Enable</button>
     setTimeout(function(){ sc.hidden=true; },280); if(last) last.focus(); }
   var loaded=false;
   function boot(){ if(loaded) return; loaded=true;
-    var sc2=document.createElement('script'); sc2.src='agent.72601b6ee2.js'; sc2.defer=true; document.body.appendChild(sc2); }
+    var sc2=document.createElement('script'); sc2.src='agent.0891432a6f.js'; sc2.defer=true; document.body.appendChild(sc2); }
   op.addEventListener('click',function(){ boot(); open(); });
   sc.addEventListener('click',close);
   d.querySelector('[data-agent-close]').addEventListener('click',close);
@@ -253,6 +253,28 @@ Ask Enable</button>
   // hand-off point: an agent listens for agent:ask and renders into #agent-root
   window.EnableAgent={open:open,close:close,root:document.getElementById('agent-root'),
                       el:d,on:function(fn){ d.addEventListener('agent:ask',function(e){ fn(e.detail.text); }); }};
+})();
+(function(){                                   // Products dropdown
+  var g = document.querySelector('[data-nav-group]');
+  if(!g) return;
+  var t = g.querySelector('.nav-trigger'), shut;
+  var fine = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  function open(){ clearTimeout(shut); g.setAttribute('data-open',''); t.setAttribute('aria-expanded','true'); }
+  function close(){ g.removeAttribute('data-open'); t.setAttribute('aria-expanded','false'); }
+  t.addEventListener('click', function(){ g.hasAttribute('data-open') ? close() : open(); });
+  if(fine){                                    // pointer users expect hover, with a forgiving exit
+    g.addEventListener('mouseenter', open);
+    g.addEventListener('mouseleave', function(){ shut = setTimeout(close, 160); });
+  }
+  // deliberately not opening on focus: tabbing past the nav should not pop a menu.
+  // Enter and Space already reach the button's click handler.
+  g.addEventListener('focusout', function(e){
+    if(!g.contains(e.relatedTarget)) close();
+  });
+  document.addEventListener('click', function(e){ if(!g.contains(e.target)) close(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && g.hasAttribute('data-open')){ close(); t.focus(); }
+  });
 })();
 </script>
 </body>

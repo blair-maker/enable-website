@@ -106,6 +106,28 @@ Ask Enable</button>
   window.EnableAgent={open:open,close:close,root:document.getElementById('agent-root'),
                       el:d,on:function(fn){ d.addEventListener('agent:ask',function(e){ fn(e.detail.text); }); }};
 })();
+(function(){                                   // Products dropdown
+  var g = document.querySelector('[data-nav-group]');
+  if(!g) return;
+  var t = g.querySelector('.nav-trigger'), shut;
+  var fine = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  function open(){ clearTimeout(shut); g.setAttribute('data-open',''); t.setAttribute('aria-expanded','true'); }
+  function close(){ g.removeAttribute('data-open'); t.setAttribute('aria-expanded','false'); }
+  t.addEventListener('click', function(){ g.hasAttribute('data-open') ? close() : open(); });
+  if(fine){                                    // pointer users expect hover, with a forgiving exit
+    g.addEventListener('mouseenter', open);
+    g.addEventListener('mouseleave', function(){ shut = setTimeout(close, 160); });
+  }
+  // deliberately not opening on focus: tabbing past the nav should not pop a menu.
+  // Enter and Space already reach the button's click handler.
+  g.addEventListener('focusout', function(e){
+    if(!g.contains(e.relatedTarget)) close();
+  });
+  document.addEventListener('click', function(e){ if(!g.contains(e.target)) close(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && g.hasAttribute('data-open')){ close(); t.focus(); }
+  });
+})();
 </script>
 '''
 
@@ -353,6 +375,38 @@ def render(n, names, depth=1):
     return pad + '<%s%s>\n%s%s</%s>\n' % (tag, a, inner, pad, tag)
 
 
+PRODUCTS = [('lumin', 'Lumin', 'Agreements signed and filed without leaving Salesforce'),
+            ('gridmate', 'GridMate', 'Spreadsheet-speed editing, and RevenueMate for quoting'),
+            ('storeconnect', 'StoreConnect', 'Storefront and point of sale, natively on Salesforce')]
+
+
+def products_menu(inner, slug):
+    """The Products nav item pointed at lumin.html, which picked one product arbitrarily.
+    Swap it for a group the visitor chooses from. The trigger keeps whatever class the
+    original anchor carried, so it stays typographically identical to its neighbours."""
+    m = re.search(r'<a class="([^"]+)" href="lumin\.html">Products</a>', inner)
+    if not m:
+        return inner
+    cls = m.group(1)
+    items = []
+    for s_, name, blurb in PRODUCTS:
+        cur = ' aria-current="page"' if s_ == slug else ''
+        items.append('<a class="nav-item" role="menuitem" href="%s.html"%s>'
+                     '<span class="nav-item-t">%s</span>'
+                     '<span class="nav-item-d">%s</span></a>' % (s_, cur, name, blurb))
+    open_ = ' data-on' if slug in {s_ for s_, _, _ in PRODUCTS} else ''
+    group = ('<div class="nav-group"%s data-nav-group>'
+             '<button class="%s nav-trigger" type="button" aria-expanded="false" '
+             'aria-haspopup="true" aria-controls="nav-products">Products'
+             '<svg width="10" height="7" viewBox="0 0 10 7" aria-hidden="true">'
+             '<path d="M1 1.5L5 5.5L9 1.5" fill="none" stroke="currentColor" '
+             'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+             '</button>'
+             '<div class="nav-menu" id="nav-products" role="menu">%s</div>'
+             '</div>') % (open_, cls, ''.join(items))
+    return inner.replace(m.group(0), group, 1)
+
+
 def build_index(bodies, slugs):
     """Pull heading + prose pairs out of the rendered pages, so the drawer can answer
     from what the site actually says rather than from anything invented."""
@@ -360,7 +414,9 @@ def build_index(bodies, slugs):
     entries = []
     for slug, (inner, title) in bodies.items():
         # headings and paragraphs in document order
-        toks = re.findall(r'<(h1|h2|h3)[^>]*>(.*?)</\1>|<p[^>]*>(.*?)</p>', inner, re.S)
+        # <p(?:\s...)?> not <p[^>]*>: the nav chevron's <path> matched the loose form and
+        # swallowed the whole menu into the index
+        toks = re.findall(r'<(h1|h2|h3)[^>]*>(.*?)</\1>|<p(?:\s[^>]*)?>(.*?)</p>', inner, re.S)
         heading, buf = title, []
 
         def flush():
@@ -437,6 +493,25 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.nav-group{position:relative;display:inline-flex}
+.nav-trigger{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;
+ cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:inherit}
+.nav-trigger svg{transition:transform .18s ease;opacity:.6;flex-shrink:0}
+.nav-group[data-open] .nav-trigger svg{transform:rotate(180deg);opacity:1}
+.nav-group[data-on] .nav-trigger{color:var(--ink)}
+.nav-menu{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);margin-top:14px;
+ min-width:330px;background:#fff;border:1px solid var(--hair);border-radius:14px;padding:8px;
+ box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px;z-index:60;
+ opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s}
+.nav-group[data-open] .nav-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
+.nav-menu::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+.nav-item{display:flex;flex-direction:column;gap:2px;padding:11px 14px;border-radius:9px;
+ text-decoration:none;transition:background .12s ease}
+.nav-item:hover,.nav-item:focus-visible{background:var(--mist);outline:none}
+.nav-item[aria-current="page"]{background:var(--tint)}
+.nav-item-t{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.nav-item-d{font-size:13px;line-height:1.45;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.nav-menu,.nav-trigger svg{transition:none}}
 .agent-think{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
 .agent-stars{display:inline-flex;gap:3px;color:var(--green)}
 .agent-stars svg{animation:agent-tw 1.4s ease-in-out infinite}
@@ -532,6 +607,7 @@ svg{max-width:100%;height:auto}
     out.append('header{flex-wrap:nowrap!important;height:auto;padding:16px 40px;gap:16px}')
     out.append('header nav{gap:18px}')
     out.append('header nav a:not(:last-child){display:none}')
+    out.append('.nav-group{display:none}')
     out.append('\n'.join(sorted(set(tablet))))
     out.append('}')
     out.append('\n@media (max-width:760px){')
@@ -559,6 +635,7 @@ def main():
     for stem, slug, title in PAGES:
         wrapper = trees[stem].root.kids[0]
         inner = ''.join(render(k, names, 2) for k in wrapper.kids)
+        inner = products_menu(inner, slug)
         bodies[slug] = (inner, title)
         for attr in re.findall(r'class="([^"]+)"', inner):
             used.update(attr.split())      # multi-class attrs, or rules get pruned

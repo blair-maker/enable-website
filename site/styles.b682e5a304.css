@@ -53,6 +53,25 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.nav-group{position:relative;display:inline-flex}
+.nav-trigger{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;
+ cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:inherit}
+.nav-trigger svg{transition:transform .18s ease;opacity:.6;flex-shrink:0}
+.nav-group[data-open] .nav-trigger svg{transform:rotate(180deg);opacity:1}
+.nav-group[data-on] .nav-trigger{color:var(--ink)}
+.nav-menu{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);margin-top:14px;
+ min-width:330px;background:#fff;border:1px solid var(--hair);border-radius:14px;padding:8px;
+ box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px;z-index:60;
+ opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s}
+.nav-group[data-open] .nav-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
+.nav-menu::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+.nav-item{display:flex;flex-direction:column;gap:2px;padding:11px 14px;border-radius:9px;
+ text-decoration:none;transition:background .12s ease}
+.nav-item:hover,.nav-item:focus-visible{background:var(--mist);outline:none}
+.nav-item[aria-current="page"]{background:var(--tint)}
+.nav-item-t{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.nav-item-d{font-size:13px;line-height:1.45;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.nav-menu,.nav-trigger svg{transition:none}}
 .agent-think{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
 .agent-stars{display:inline-flex;gap:3px;color:var(--green)}
 .agent-stars svg{animation:agent-tw 1.4s ease-in-out infinite}
@@ -359,6 +378,7 @@ section>div[class*="row"]{flex-direction:column;align-items:stretch;gap:20px}
 header{flex-wrap:nowrap!important;height:auto;padding:16px 40px;gap:16px}
 header nav{gap:18px}
 header nav a:not(:last-child){display:none}
+.nav-group{display:none}
 .badge-slot-3{width:100%}
 .badge-slot{width:100%}
 .caption-5{width:100%}
