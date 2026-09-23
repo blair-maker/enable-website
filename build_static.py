@@ -41,7 +41,7 @@ PAGES = [
     ('Case4', 'work-st-john', 'Case study: rapid AI delivery at Hato Hone St John | Enable'),
     ('Case5', 'work-udc', 'Case study: UDC Finance | Enable'),
     ('ProjectCharity', 'work-project-charity',
-     'Best Technical Execution, Marketing Cloud Next ANZ 2026 | Enable'),
+     'Best Technical Execution, Marketing Cloud Next ANZ Nonprofit Partner Showdown | Enable'),
 ]
 SLUG = {stem: slug for stem, slug, _ in PAGES}
 DRAWER = '''<button class="agent-launch" type="button" aria-haspopup="dialog" aria-controls="agent-drawer" aria-expanded="false" data-agent-open>
@@ -512,6 +512,43 @@ def footer_rebuild(inner, slug):
     return inner.replace(m.group(0), m.group(1) + ''.join(out) + '\n' + m.group(3), 1)
 
 
+# Products actually used on each engagement, confirmed rather than inferred. The four
+# older case boards predate this, and cannot be regenerated, so the strip is injected
+# here instead. UDC and Project Charity carry their own in the artboard.
+CASE_PRODUCTS = {
+    'work-heritage': ['Data 360'],
+    'work-retirement-living': ['Sales Cloud'],
+    'work-st-john': ['Sales Cloud', 'Service Cloud', 'Claude'],
+    'work-farm-focus': ['Sales Cloud', 'Service Cloud', 'Data 360', 'Agentforce',
+                        'Agentforce Marketing', 'Slack'],
+}
+PRODUCT_ICON = {'Data 360': 'sf-data-cloud.png', 'Sales Cloud': 'sf-sales-cloud.png',
+                'Service Cloud': 'sf-service-cloud.png', 'Marketing Cloud Next': 'sf-marketing-cloud.png',
+                'Agentforce': 'sf-agentforce.png', 'Agentforce Marketing': 'sf-agentforce.png',
+                'Slack': 'sf-slack.png', 'Salesforce Intelligence': None, 'Claude': None}
+
+
+def case_products(inner, slug):
+    names = CASE_PRODUCTS.get(slug)
+    if not names:
+        return inner
+    m = re.search(r'<section[^>]*id="top"[^>]*>', inner)
+    if not m:
+        return inner
+    end = inner.find('</section>', m.end())
+    if end < 0:
+        return inner
+    end += len('</section>')
+    chips = []
+    for n in names:
+        f = PRODUCT_ICON.get(n)
+        ic = ('<img src="assets/%s" alt="" width="72" height="72">' % f) if f else ''
+        chips.append('<span class="prod-chip">%s<span>%s</span></span>' % (ic, n))
+    strip = ('\n    <section class="built-on">\n      <span class="built-on-label">Built on</span>\n'
+             '      <div class="built-on-row">%s</div>\n    </section>\n' % ''.join(chips))
+    return inner[:end] + strip + inner[end:]
+
+
 def build_index(bodies, slugs):
     """Pull heading + prose pairs out of the rendered pages, so the drawer can answer
     from what the site actually says rather than from anything invented."""
@@ -598,6 +635,14 @@ input,textarea{font-family:inherit}
 .agent-input{flex:1;border:none;background:none;padding:11px 0;font-size:15px;color:var(--ink);outline:none}
 .agent-send{border:none;background:var(--green);color:var(--ink);border-radius:8px;width:36px;height:36px;
  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.built-on{display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;
+ padding:26px max(80px, calc((100% - 1280px) / 2));border-bottom:1px solid var(--hair);background:#fff}
+.built-on-label{color:var(--muted);font-size:15px;font-weight:500;flex-shrink:0}
+.built-on-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.prod-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--hair);
+ border-radius:3px;padding:7px 14px}
+.prod-chip img{width:19px;height:19px;flex-shrink:0}
+@media (max-width:760px){.built-on{padding-left:24px;padding-right:24px}}
 .nav-group{position:relative;display:inline-flex}
 .nav-trigger{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;
  cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:inherit}
@@ -742,6 +787,7 @@ def main():
         wrapper = trees[stem].root.kids[0]
         inner = ''.join(render(k, names, 2) for k in wrapper.kids)
         inner = footer_rebuild(nav_rebuild(inner, slug), slug)
+        inner = case_products(inner, slug)
         bodies[slug] = (inner, title)
         for attr in re.findall(r'class="([^"]+)"', inner):
             used.update(attr.split())      # multi-class attrs, or rules get pruned
