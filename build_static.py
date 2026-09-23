@@ -37,7 +37,7 @@ PAGES = [
     ('CaseStudies', 'work', 'Our work, described honestly | Enable'),
     ('Case1', 'work-heritage', 'Case study: six systems, one supporter profile | Enable'),
     ('Case2', 'work-retirement-living', 'Case study: when every enquiry reaches one person | Enable'),
-    ('Case3', 'work-farm-focus', 'Case study: Farm Focus | Enable'),
+    ('Case3', 'work-farm-focus', 'Farm Focus: Data 360 and Marketing Cloud Next | Enable'),
     ('Case4', 'work-st-john', 'Case study: rapid AI delivery at Hato Hone St John | Enable'),
     ('Case5', 'work-udc', 'Case study: UDC Finance | Enable'),
     ('ProjectCharity', 'work-project-charity',
@@ -519,8 +519,6 @@ CASE_PRODUCTS = {
     'work-heritage': ['Data 360'],
     'work-retirement-living': ['Sales Cloud'],
     'work-st-john': ['Sales Cloud', 'Service Cloud', 'Claude'],
-    'work-farm-focus': ['Sales Cloud', 'Service Cloud', 'Data 360', 'Agentforce',
-                        'Agentforce Marketing', 'Slack'],
 }
 PRODUCT_ICON = {'Data 360': 'sf-data-cloud.png', 'Sales Cloud': 'sf-sales-cloud.png',
                 'Service Cloud': 'sf-service-cloud.png', 'Marketing Cloud Next': 'sf-marketing-cloud.png',
